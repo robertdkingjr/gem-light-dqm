@@ -652,8 +652,8 @@ void layerAll(vector<vector<TH1*>> hs, vector<TString> inames)
 void gtprintCanvas(TCanvas* canvas, TString opathName)
 {
 
-  canvas->Print(opathName+".jpg","jpg");
-  canvas->Print(opathName+".png","png");
+//  canvas->Print(opathName+".jpg","jpg");
+//  canvas->Print(opathName+".png","png");
 
   //Create JSON file
   ofstream jsonfile;

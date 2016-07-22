@@ -70,11 +70,11 @@ class AMC_histogram: public Hardware_histogram
       }
     }
     //!Adds a GEB_histogram object to m_gebsH vector
-    void addGEBH(GEB_histogram gebH){m_gebsH.push_back(gebH);}
+    void addGEBH(GEB_histogram* gebH, int i){m_gebsH[i]=gebH;}
     //!Returns the m_gebsH vector
-    std::vector<GEB_histogram> gebsH(){return m_gebsH;}
+    GEB_histogram* gebsH(int i){return m_gebsH[i];}
   private:
-    std::vector<GEB_histogram> m_gebsH;   ///<A vector of GEB_histogram
+    GEB_histogram *m_gebsH[2];   ///<A vector of GEB_histogram
     TH1F* AMCnum;                         ///<Histogram for AMC number
     TH1F* L1A;                            ///<Histogram for L1A number
     TH1F* BX;                             ///<Histogram for Bunch Crossing ID

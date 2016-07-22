@@ -55,13 +55,13 @@ class AMC13_histogram: public Hardware_histogram
 
      
     //!Adds an AMC_histogram object to the m_amcsH vector
-    void addAMCH(AMC_histogram amcH){m_amcsH.push_back(amcH);}
+    void addAMCH(AMC_histogram* amcH, int i){m_amcsH[i]=amcH;}
 
     //!Returns the m_amcsH vector
-    std::vector<AMC_histogram> amcsH(){return m_amcsH;}
+    AMC_histogram* amcsH(int i){return m_amcsH[i];}
   private:
 
-    std::vector<AMC_histogram> m_amcsH;   ///<A vector of AMC_histogram
+    AMC_histogram *m_amcsH[12];   ///<A vector of AMC_histogram
     TH1F* control_bit5;                   ///<Histogram for control bit 5
     TH1F* control_bitA;                   ///<Histogram for control bit A
     TH1F* Evt_ty;                         ///<Histogram for Evt_ty
