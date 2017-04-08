@@ -3,7 +3,9 @@
  *
  * N. Amapane, G. Cerminara, M. Dalchenko
  */
-#define DEBUG 1
+#ifndef DEBUG
+#define DEBUG 0
+#endif
 
 #include <sstream>
 #include <iostream>
@@ -677,8 +679,8 @@ void gtprint(TH1 *h, TString name, TString opath)
 
   gROOT->ProcessLine(".!mkdir -p "+opath+"/");
 
-  cv->Print(opath+name+".jpg","jpg");
-  cv->Print(opath+name+".png","png");
+  //cv->Print(opath+name+".jpg","jpg");
+  //cv->Print(opath+name+".png","png");
   //cv->Print(opath+name+".pdf","pdf");
 
   //Create JSON file

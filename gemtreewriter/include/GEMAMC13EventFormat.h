@@ -1,4 +1,5 @@
 #include <vector>
+//!A class for VFAT data
 class VFATdata 
 {
   private:
@@ -17,7 +18,9 @@ class VFATdata
     bool     fisBlockGood;             ///<Shows if block is good (control bits, chip ID and CRC checks)
   
   public:
+    //!Empty constructor. Functions used to assign data members.
     VFATdata(){}
+    //!Constructor requiring arguments.
     VFATdata(const uint8_t &b1010_, 
             const uint16_t &BC_,
             const uint8_t &b1100_, 
@@ -44,6 +47,7 @@ class VFATdata
         fcrc_calc(crc_calc_),
         fSlotNumber(SlotNumber_),
         fisBlockGood(isBlockGood_){}
+    //!Destructor for the class
     ~VFATdata(){}
 
     //!Read first word from the block.
@@ -90,7 +94,7 @@ class VFATdata
 };
 
 //!A class for GEB data
-/**
+/*!
  The number after the ":" indicates how many bits a certain item consists of. 
 */
 class GEBdata
@@ -102,16 +106,16 @@ class GEBdata
     //GEM chamber header
 
       //!Zero Suppression Flags:24  (8 zeroes):8
-      /**Bitmask indicating if certain VFAT blocks have been zero suppressed*/
+      /*!Bitmask indicating if certain VFAT blocks have been zero suppressed*/
       uint32_t m_ZeroSup;
       //!Input ID:5    000:3
-      /**GLIB input ID (starting at 0)*/
+      /*!GLIB input ID (starting at 0)*/
       uint8_t m_InputID;   
       //!VFAT word count:12   0000:4
-      /**Size of VFAT payload in 64 bit words*/
+      /*!Size of VFAT payload in 64 bit words*/
       uint16_t m_Vwh;
       //!Thirteen Flags, only one bit each
-      /** 
+      /*! 
        000:3    EvtFIFO full:1    InFIFO full:1   L1AFIFO full:1    Even size overflow:1    EvtFIFO near full:1   InFIFO near full:1    
        L1AFIFO near full:1    Event size warn:1   No VFAT marker:1    OOS GLIB VFAT:1   OOS GLIB OH:1   
        BX mismatch GLIB VFAT:1    BX mismatch GLIB OH:1
@@ -121,20 +125,22 @@ class GEBdata
     //GEM chamber trailer
 		
       //!OH CRC:16
-      /**CRC of OH data (currently not available)*/
+      /*!CRC of OH data (currently not available)*/
       uint16_t m_OHCRC;     
       //!0000:4   VFAT word count:12   
-      /**Same as in header. This one actually counts the number of valid words that were sent to AMC13; the one in header is what we expected to send to AMC13*/
+      /*!Same as in header. This one actually counts the number of valid words that were sent to AMC13; the one in header is what we expected to send to AMC13*/
       uint16_t m_Vwt;      
       //!(7 0's):7    InFIFO underflow:1   
-      /**Input status (critical): Input FIFO underflow occured while sending this event*/
+      /*!Input status (critical): Input FIFO underflow occured while sending this event*/
       uint8_t m_InFu;    
       //!(7 0's):7    Stuck data:1    
-      /**Input status (warning): Data in InFIFO or EvtFIFO when L1A FIFO was empty. Only resets with resync or reset*/
+      /*!Input status (warning): Data in InFIFO or EvtFIFO when L1A FIFO was empty. Only resets with resync or reset*/
 		  uint8_t m_Stuckd; 
 
   public:
+    //!Empty constructor. Functions used to assign data members.
     GEBdata(){};
+    //!Constrcutor requirng arguments.
     GEBdata(const uint32_t &ZeroSup_, 
               const uint8_t &InputID_, 
               const uint16_t &Vwh_, 
@@ -150,20 +156,21 @@ class GEBdata
           m_OHCRC(OHCRC_),                                    
           m_Vwt(Vwt_),                             
           m_InFu(InFu_),                                   
-          m_Stuckd(Stuckd_){}         
+          m_Stuckd(Stuckd_){}  
+    //!Destructor for the class.
     ~GEBdata(){vfatd.clear();}
 
     // need to include all the flags
     //!Reads the word for the GEM Chamber Header. Puts the thirteen flags in a vector.
-    /**
+    /*!
      Fills the Zero Suppression, GLIB Input ID, VFAT word count, and Thirteen Flags.
      */
     void setChamberHeader(uint64_t word)
     {
-      m_ZeroSup = 0x00ffffff & (word >> 40);        /*!<Zero Suppression*/
-      m_InputID = 0b00011111 & (word >> 35);        /*!<GLIB Input ID*/
-      m_Vwh = 0x0fff & (word >> 23);                /*!<VFAT word count*/
-      m_ErrorC = 0b0001111111111111 & (word);    /*!<Thirteen Flags*/
+      m_ZeroSup = 0x00ffffff & (word >> 40);        /*!Zero Suppression*/
+      m_InputID = 0b00011111 & (word >> 35);        /*!GLIB Input ID*/
+      m_Vwh = 0x0fff & (word >> 23);                /*!VFAT word count*/
+      m_ErrorC = 0b0001111111111111 & (word);    /*!Thirteen Flags*/
       for(int i=0; i<13; ++i)
       {
         v_GEBflags.push_back(0x01 & (m_ErrorC >> i));
@@ -172,7 +179,7 @@ class GEBdata
 
     //return specific flags
     //!Returns one of thirteen flags from GEM chamber header.
-    /**
+    /*!
      Argument must be between 0 and 12. The flags corresponding to a given argument are shown.
      12->EvtFIFO full    11->InFIFO full    10->L1AFIFO full   9->Even size overflow    8->EvtFIFO near full   5->InFIFO near full    
      6->L1AFIFO near full    5->Event size warn   4->No VFAT marker    3->OOS GLIB VFAT   2->OOS GLIB OH 
@@ -185,15 +192,15 @@ class GEBdata
     
     // need to include all the flags
     //!Reads the word for GEM Chamber Trailer
-    /**
+    /*!
      Fills the OH CRC, VFAT word count, InFIFO underflow, and Stuck data.
     */
     void setChamberTrailer(uint64_t word)
     {
-      m_OHCRC = word >> 48;           /*!<OH CRC*/
-      m_Vwt = 0x0fff & (word >> 36);  /*!<VFAT word count*/
-      m_InFu = 0x0f & (word >> 35);   /*!<InFIFO underflow*/
-      m_Stuckd = 0x01 & (word >> 34); /*!<Stuck data*/
+      m_OHCRC = word >> 48;           /*!OH CRC*/
+      m_Vwt = 0x0fff & (word >> 36);  /*!VFAT word count*/
+      m_InFu = 0x0f & (word >> 35);   /*!InFIFO underflow*/
+      m_Stuckd = 0x01 & (word >> 34); /*!Stuck data*/
     }
 
     uint32_t ZeroSup()  {return m_ZeroSup;}   ///<Returns Zero Suppression flags
@@ -213,7 +220,7 @@ class GEBdata
 };
 
 //!A class for AMC data
-/**
+/*!
  The number after the ":" indicates how many bits a certain item consists of.
 */
 class AMCdata
@@ -224,54 +231,54 @@ class AMCdata
     //AMC header #1	
 
       //!0000:4   AMC#:4
-      /**Slot number of AMC(GLIB/MP7/EC7, etc.)*/
+      /*!Slot number of AMC(GLIB/MP7/EC7, etc.)*/
       uint8_t  m_AMCnum;        
       //!(8 zeroes):8    L1A ID:24    
-      /**Basically like event number, but reset by resync*/
+      /*!Basically like event number, but reset by resync*/
       uint32_t m_L1A;          
       //!0000:4   BX ID:12         
-      /**Bunch crossing ID*/
+      /*!Bunch crossing ID*/
       uint16_t m_BX;    
       //!(12 zeroes):12    Data length:20   
-      /**Overall size of this FED event fragment in 64bit words (including headers and trailers)*/
+      /*!Overall size of this FED event fragment in 64bit words (including headers and trailers)*/
       uint32_t m_Dlength;
 
     //AMC header #2
 
       uint8_t m_FV;           ///<0000:4    Format Version:4    
       //!0000:4   Run Type:4   
-      /**Current version = 0x0;  Could be used to encode run types like physics, cosmics, threshold scan, etc.*/
+      /*!Current version = 0x0;  Could be used to encode run types like physics, cosmics, threshold scan, etc.*/
       uint8_t m_Rtype;
       uint8_t m_Param1;       ///<Run param1:8 
       uint8_t m_Param2;       ///<Run param2:8
       uint8_t m_Param3;       ///<Run param3:8 
       uint16_t m_Onum;        ///<Orbit number:16 
       //!Board ID:16
-      /**This is currently filled with 8bit long GLIB serial number*/
+      /*!This is currently filled with 8bit long GLIB serial number*/
       uint16_t m_BID;
 
     //GEM event header
 
       //!(8 zeroes):8   GEM DAV list:24    
-      /**Bitmask indicating which inputs/chambers have data*/
+      /*!Bitmask indicating which inputs/chambers have data*/
       uint32_t m_GEMDAV; 
       //!(30 zeroes):30    Buffer Status:34  
-      /**Bitmask indicating buffer error in given inputs*/
+      /*!Bitmask indicating buffer error in given inputs*/
       uint64_t m_Bstatus;  
       //!000:3   GEM DAV count:5    
-      /**Number of chamber blocks*/
+      /*!Number of chamber blocks*/
       uint8_t  m_GDcount;   
       //!0000:4    TTS state:4    
-      /**Debug: GLIB TTS state at the moment when this event was built*/
+      /*!Debug: GLIB TTS state at the moment when this event was built*/
       uint8_t  m_Tstate;
 
     //GEM event trailer
 
       //!(8 zeroes):8    Chamber timeout:24   
-      /**Bitmask indicating if GLIB did not recieve data from particular input for this L1A in X amount of GTX clock cycles*/
+      /*!Bitmask indicating if GLIB did not recieve data from particular input for this L1A in X amount of GTX clock cycles*/
       uint32_t m_ChamT;     
       //!(7 zeroes):7   OOS GLIB:1   
-      /**GLIB is out-of-sync (critical): L1A ID is different for different chambers in this event.*/
+      /*!GLIB is out-of-sync (critical): L1A ID is different for different chambers in this event.*/
       uint8_t  m_OOSG;
 
     //AMC_trailer
@@ -281,8 +288,9 @@ class AMCdata
       uint32_t m_DlengthT;
 	
   public:
-    //!Constructor for the class
+    //!Empty constructor. Functions fill the data members.
     AMCdata(){};
+    //!Constructor requiring arguments.
     AMCdata(const uint8_t &AMCnum_, 
               const uint32_t &L1A_,
               const uint16_t &BX_, 
@@ -321,52 +329,52 @@ class AMCdata
     ~AMCdata(){gebd.clear();}
 
     //!Reads the word for AMC Header 
-    /**
+    /*!
      Fills the AMC number, L1A ID, BX ID, and Data Length
     */
     void setAMCheader1(uint64_t word)
     {
-      m_AMCnum = 0x0f & (word >> 56);     /*!<AMC number*/
-      m_L1A = 0x00ffffff & (word >> 32);  /*!<L1A ID */
-      m_BX = 0x0fff & (word >> 20);       /*!<BX ID */
-      m_Dlength = 0x000fffff & word;      /*!<Data Length */
+      m_AMCnum = 0x0f & (word >> 56);     /*!AMC number*/
+      m_L1A = 0x00ffffff & (word >> 32);  /*!L1A ID */
+      m_BX = 0x0fff & (word >> 20);       /*!BX ID */
+      m_Dlength = 0x000fffff & word;      /*!Data Length */
     }
     
     //!Reads the word for the AMC Header 2
-    /**
+    /*!
      Fills the Format Version, Run Type, Run Param 1, Run Param 2, Run Param 3, Orbit Number, and Board ID
     */
     void setAMCheader2(uint64_t word)
     {
-      m_FV = 0x0f & (word >> 60);     /*!<Format Version */
-      m_Rtype = 0x0f & (word >> 56);  /*!<Run Type */
-      m_Param1 = word >> 48;          /*!<Run Param 1 */
-      m_Param2 = word >> 40;          /*!<Run Param 2 */
-      m_Param3 = word >> 32;          /*!<Run Param 3 */
-      m_Onum = word >> 16;            /*!<Orbit Number */
+      m_FV = 0x0f & (word >> 60);     /*!Format Version */
+      m_Rtype = 0x0f & (word >> 56);  /*!Run Type */
+      m_Param1 = word >> 48;          /*!Run Param 1 */
+      m_Param2 = word >> 40;          /*!Run Param 2 */
+      m_Param3 = word >> 32;          /*!Run Param 3 */
+      m_Onum = word >> 16;            /*!Orbit Number */
       m_BID = word;                   /*!Board ID */
     }
     
     //!Reads the word for the GEM Event Header
-    /**
+    /*!
      Fills the GEM DAV list, Buffer Status, GEM DAV count, and TTS state.
     */
     void setGEMeventHeader(uint64_t word)
     {
-      m_GEMDAV = 0x00ffffff & (word >> 40);   /*!<GEM DAV list*/
-      m_Bstatus = 0x00ffffff & (word >> 16);  /*!<Buffer Status*/
-      m_GDcount = 0b00011111 & (word >> 11);  /*!<GEM DAV count*/
-      m_Tstate = 0b00000111 & word;           /*!<TTS state*/
+      m_GEMDAV = 0x00ffffff & (word >> 40);   /*!GEM DAV list*/
+      m_Bstatus = 0x00ffffff & (word >> 16);  /*!Buffer Status*/
+      m_GDcount = 0b00011111 & (word >> 11);  /*!GEM DAV count*/
+      m_Tstate = 0b00000111 & word;           /*!TTS state*/
     }
 
     //!Reads the word for the GEM Event Trailer
-    /**
+    /*!
      Fills the Chamber Timeout and OOS GLIB.
     */
     void setGEMeventTrailer(uint64_t word)
     {
-      m_ChamT = 0x00ffffff & (word >> 40);  /*!<Chamber Timeout*/
-      m_OOSG = 0b00000001 & (word >> 39);   /*!<OOS GLIB*/
+      m_ChamT = 0x00ffffff & (word >> 40);  /*!Chamber Timeout*/
+      m_OOSG = 0b00000001 & (word >> 39);   /*!OOS GLIB*/
     }
 
     //!Reads the word for the AMC Trailer
@@ -407,7 +415,7 @@ class AMCdata
     //!Returns a vector of GEB data
     std::vector<GEBdata> gebs(){return gebd;}
 };
-
+//!A class for AMC13 data
 class AMC13Event
 {
   private:
@@ -440,14 +448,31 @@ class AMC13Event
     uint16_t m_CRC_cdf;
 
   public:
-
+    //!Empty constructor. Functions fill data members.
     AMC13Event(){}
+    //!Destructor for the class.
     ~AMC13Event(){m_AMC_size.clear(); m_Blk_No.clear(); m_AMC_No.clear(); m_BoardID.clear(); m_amcs.clear();}
 
-    int nAMC(){return unsigned(m_nAMC);}
-    int LV1_id(){return unsigned(m_LV1_id);}
+    int nAMC()            {return unsigned(m_nAMC);}
+    int LV1_id()          {return unsigned(m_LV1_id);}
+    uint8_t cb_5()        {return m_cb5;}   
+    uint8_t Evt_ty()      {return m_Evt_ty;}
+    uint16_t BX_id()      {return m_BX_id;} 
+    uint16_t Source_id()  {return m_Source_id;}
+    uint8_t CalTyp()      {return m_CalTyp;}
+    uint32_t OrN()        {return m_OrN;}
+    uint8_t cb0()         {return m_cb0;}        
+    uint32_t CRC_amc13()  {return m_CRC_amc13;}
+    uint8_t Blk_NoT()     {return m_Blk_NoT;}
+    uint8_t LV1_idT()     {return m_LV1_idT;}
+    uint16_t BX_idT()     {return m_BX_idT;}
+    uint8_t cbA()         {return m_cbA;}
+    uint32_t EvtLength()  {return  m_EvtLength;}
+    uint16_t CRC_cdf()    {return m_CRC_cdf;}
+
+    std::vector<uint8_t> AMC_Nos(){return m_AMC_No;}
     std::vector<AMCdata> amcs(){return m_amcs;}
-    //*** Set the CDF header. Not full header implemented yet. Doc:http://ohm.bu.edu/~hazen/CMS/AMC13/AMC13DataFormatDrawingv3.pdf
+    //! Set the CDF header. Not full header implemented yet. Doc:http://ohm.bu.edu/~hazen/CMS/AMC13/AMC13DataFormatDrawingv3.pdf
     void setCDFHeader(uint64_t word)
     {
       m_cb5 = 0x0f & (word >> 60);
@@ -457,7 +482,7 @@ class AMC13Event
       m_Source_id = 0x0fff & (word >> 8);
     }
     //!Sets the AMC13 header
-    /**
+    /*!
      Fills m_CalTyp, m_nAMC, m_OrN, and m_cb0
     */
     void setAMC13header(uint64_t word)
@@ -481,7 +506,7 @@ class AMC13Event
     //!Adds to m_amcs vector
     void addAMCpayload(AMCdata a){m_amcs.push_back(a);}
     //!Sets the AMC13 trailer
-    /**
+    /*!
      Fills m_CRC_amc13, m_Blk_NoT, m_LV1_idT, and m_BX_idT
     */
     void setAMC13trailer(uint64_t word)
@@ -492,7 +517,7 @@ class AMC13Event
       m_BX_idT = 0x0fff & word;
     }
     //!Sets CDF Trailer
-    /**
+    /*!
      Fills m_cbA, m_EvtLength, and m_CRC_cdf.
     */
     void setCDFTrailer(uint64_t word)

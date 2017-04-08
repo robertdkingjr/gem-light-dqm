@@ -1,6 +1,6 @@
 #!/bin/bash/
 cd gemtreewriter
-make all -j8
+make all -j4
 cd ../dqm-root/
-make all -j8
+make all -j4
 cd ../

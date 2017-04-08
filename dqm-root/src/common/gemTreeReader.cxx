@@ -1,4 +1,4 @@
-#define DEBUG 1
+#define DEBUG 0
 #define NVFAT 24
 #define NETA 8
 #include <iomanip> 
@@ -46,7 +46,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include "gem/datachecker/GEMDataChecker.h"
 #include "gem/readout/GEMslotContents.h"
 #include "GEMClusterization/GEMStrip.h"
 #include "GEMClusterization/GEMStripCollection.h"
@@ -60,9 +59,12 @@
 
 using namespace std;
 
+//!A class that creates the subdirectories and histograms from VFAT, GEM, AMC and AMC13 data
 class treeReader
 {
 public:
+
+  //!The constructor requires a file name ending with .raw.root
   treeReader(const std::string &ifilename)
   {
     std::string tmp = ifilename.substr(ifilename.size()-9, ifilename.size());
@@ -83,25 +85,25 @@ public:
   ~treeReader(){}
 
 private:
-  TFile *ifile;
-  TFile *ofile;
-  std::string ofilename;
+  TFile *ifile;   ///<Input File, assigned in the constructor
+  TFile *ofile;   ///<Output File, assigned in the constructor, where all the histograms will go
+  std::string ofilename;  ///<Name of output file, same as input file, but is .analyzed.root instead of .raw.root
 
-  std::vector<TDirectory*> AMC13dir;
-  std::vector<TDirectory*> AMCdir;
-  std::vector<TDirectory*> GEBdir;
-  std::vector<TDirectory*> VFATdir;
+  //std::vector<TDirectory*> AMC13dir;  //unused  
+  //std::vector<TDirectory*> AMCdir;    //unused
+  //std::vector<TDirectory*> GEBdir;    //unused
+  //std::vector<TDirectory*> VFATdir;   //unused
 
-  vector<AMC13Event> v_amc13;
-  vector<AMCdata> v_amc;
-  vector<GEBdata> v_geb;
-  vector<VFATdata> v_vfat;
+  vector<AMC13Event> v_amc13;    ///<Vector of AMC13Event
+  vector<AMCdata> v_amc;         ///<Vector of AMCdata
+  vector<GEBdata> v_geb;         ///<Vector of GEBdata
+  vector<VFATdata> v_vfat;       ///Vector of VFATdata
 
 
-  vector<AMC13_histogram> v_amc13H;
-  vector<AMC_histogram> v_amcH;
-  vector<GEB_histogram> v_gebH;
-  vector<VFAT_histogram> v_vfatH;
+  //vector<AMC13_histogram> v_amc13H;   //unused
+  vector<AMC_histogram> v_amcH;        ///<Vector of AMC_histogram
+  vector<GEB_histogram> v_gebH;        ///<Vector of GEB_histogram
+  vector<VFAT_histogram> v_vfatH;      ///<Vector of VFAT_histogram
 
   unordered_map<std::string, int> vfat_map;
   unordered_map<std::string, int> geb_map;
@@ -115,6 +117,7 @@ private:
   int m_deltaV;
   int m_Latency;
 
+  //!Fetches data from AMC13, AMC, GEB, and VFAT and puts them into vectors
   void fetchHardware()
   {
     try{
@@ -123,7 +126,7 @@ private:
       TBranch *branch = tree->GetBranch("GEMEvents");
       branch->SetAddress(&event);
       Int_t nentries = tree->GetEntries();
-      branch->GetEntry(120);
+      branch->GetEntry(0);
       v_amc13 = event->amc13s();
       for(auto a13 = v_amc13.begin(); a13!= v_amc13.end(); a13++){
 	      v_amc = a13->amcs();
@@ -146,6 +149,7 @@ private:
     }
   }
 
+  //!Creates the subdirectories for AMC13, AMC, GEB, and VFAT and books the histograms
   void bookAllHistograms()
   {
     int a13_c=0;    //counter through AMC13s
@@ -190,7 +194,7 @@ private:
         m_RunType = v_amc[a_c].Rtype();  //obtain the run type 
         g_c=0;
 
-	      /* LOOP THROUGH GEBs */
+        /* LOOP THROUGH GEBs */
         for(auto g=v_geb.begin(); g!=v_geb.end();g++){
           v_vfat=g->vfats();
           char dirgeb[30];    //filename for GEB directory
@@ -215,18 +219,22 @@ private:
 
           v_c=0;
 
-	        /* LOOP THROUGH VFATs */
-          for(auto v=v_vfat.begin(); v!=v_vfat.end();v++){
+          /* LOOP THROUGH VFATs */
+          //for(auto v=v_vfat.begin(); v!=v_vfat.end();v++){
+          for(int i=0; i<24; i++){
             char dirvfat[30];   //filename for VFAT directory
             dirvfat[0]='\0';    
             char vslot_ch[2];   //char used to put VFAT number into directory name
             vslot_ch[0] = '\0';
             std::unique_ptr<gem::readout::GEMslotContents> slotInfo_ = std::unique_ptr<gem::readout::GEMslotContents> (new gem::readout::GEMslotContents("slot_table.csv"));     
-            int vslot = slotInfo_->GEBslotIndex(v->ChipID());  //converts Chip ID into VFAT slot number
+            int t_chipID = slotInfo_->GEBChipIdFromSlot(i);
+            //int vslot = slotInfo_->GEBslotIndex(v->ChipID());  //converts Chip ID into VFAT slot number
+            int vslot = slotInfo_->GEBslotIndex(t_chipID);
             sprintf(vslot_ch, "%d", vslot);
             strcat(dirvfat,"VFAT-");
             strcat(dirvfat, vslot_ch);
-            int vID = v->ChipID();
+            int vID = t_chipID;
+            if (DEBUG) std::cout << std::dec << "[gemTreeReader]: VFAT chip ID " << std::hex << vID << std::dec << std::endl;
             char vID_ch[10];
             vID_ch[0] = '\0';
             sprintf(vID_ch, "%d", vID);
@@ -239,7 +247,7 @@ private:
             //VFAT HISTOGRAMS HERE
             m_vfatH = new VFAT_histogram(ofilename, gDirectory->mkdir(dirvfat), vslot_ch);
             m_vfatH->bookHistograms();
-            std::cout << "VFAT ID " << vID_ch << std::endl;
+            //std::cout << "VFAT ID " << vID_ch << std::endl;
             vfat_map.insert(std::make_pair(vID_ch, v_c));
             m_gebH->addVFATH(*m_vfatH);
             if (DEBUG) std::cout << std::dec << "[gemTreeReader]: GEB VFATs size " << m_gebH->vfatsH().size() << std::endl;
@@ -252,12 +260,14 @@ private:
           m_amcH->addGEBH(*m_gebH);
         } /* END GEB LOOP */
         gDirectory->cd("..");       //moves back to previous directory
-       	a_c++;
+        a_c++;
         m_amc13H->addAMCH(*m_amcH);
       } /* END AMC LOOP */
       a13_c++;
     } /* END AMC13 LOOP */
   }
+
+  //!Fills the histograms that were book from bookAllHistograms
   void fillAllHistograms()
   {
     int a13_c=0;    //counter through AMC13s
@@ -286,12 +296,13 @@ private:
           v_gebH = v_amcH[a_c].gebsH();
           //AMC_histogram * t_amcH = &(m_amc13H->amcsH().at(a_c));
           v_amcH[a_c].fillHistograms(&*a);
+
           if (m_RunType){
             m_deltaV = a->Param2() - a->Param3();
             m_Latency = a->Param1();
           }
           g_c=0;
-	        /* LOOP THROUGH GEBs */
+          /* LOOP THROUGH GEBs */
           for(auto g=v_geb.begin(); g!=v_geb.end();g++){
             v_vfat = g->vfats();
             int gID = g->InputID();
@@ -307,7 +318,7 @@ private:
                 std::cout << "GEB Not found\n";
                 continue;
             }
-	          /* LOOP THROUGH VFATs */
+            /* LOOP THROUGH VFATs */
             for(auto v=v_vfat.begin(); v!=v_vfat.end();v++){
               int vID = v->ChipID();
               char vID_ch[10];
@@ -320,17 +331,20 @@ private:
               strcpy(vID_ch,buff);
               auto vfatH_ = vfat_map.find(vID_ch);
               if(vfatH_ != vfat_map.end()) {
-                v_vfatH[vfatH_->second].fillHistograms(&*v);
+                bool final = i == nentries-1;
+                v_vfatH[vfatH_->second].fillHistograms(&*v,final);
                 if (m_RunType){
                   v_vfatH[vfatH_->second].fillScanHistograms(&*v, m_RunType, m_deltaV, m_Latency);
                 }
               }
               else {
                   std::cout << "VFAT Not found\n";
+                  std::cout << "Chip ID " << vID_ch <<"\n";
               }
             } /* END VFAT LOOP */
+            
           } /* END GEB LOOP */
-         	a_c++;
+          a_c++;
         } /* END AMC LOOP */
         a13_c++;
       } /* END AMC13 LOOP */

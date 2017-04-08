@@ -25,6 +25,7 @@ ShortPackage=dqm-root
 PackageName=dqm-root
 
 IncludeDirs = /usr/include/root
+IncludeDirs+= /usr/local/include/root
 IncludeDirs+= $(BUILD_HOME)/$(Project)
 IncludeDirs+= $(BUILD_HOME)/$(Project)/$(Package)
 IncludeDirs+= $(BUILD_HOME)/$(Project)/$(Package)/include
@@ -44,7 +45,7 @@ all:
 #	$(CC) $(ADDFLAGS) $(ROOTLIBS) $($ROOTGLIBS) $(INC) $(SRC)/printAll.cxx $(LIB)/libEvent.so -o $(BIN)/printer
 	$(CC) $(ADDFLAGS) $(ROOTLIBS) $($ROOTGLIBS) $(INC) $(SRC)/gtprinter.cxx $(LIB)/libEvent.so -o $(BIN)/gtprinter
 	$(CC) $(ADDFLAGS) $(ROOTLIBS) $($ROOTGLIBS) $(INC) $(SRC)/dummyMain.cxx $(LIB)/libEvent.so -o $(BIN)/dqm
-	$(CC) $(ADDFLAGS) $(ROOTLIBS) $($ROOTGLIBS) $(INC) $(SRC)/main.cxx $(LIB)/libEvent.so -o $(BIN)/rundqm
+#	$(CC) $(ADDFLAGS) $(ROOTLIBS) $($ROOTGLIBS) $(INC) $(SRC)/main.cxx $(LIB)/libEvent.so -o $(BIN)/rundqm
 	$(LS) $(BIN)
 
 dqm:  	#CURRENT VERSION

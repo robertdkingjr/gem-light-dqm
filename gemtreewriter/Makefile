@@ -3,17 +3,18 @@
 #
 BUILD_HOME:=$(shell pwd)/../..
 
-CC=g++
-CCFLAGS=-O2 -Wall -fPIC -pthread -m64
-ADDFLAGS=-g -std=c++0x
-RC=rootcint
-LBL=-shared -O2 -m64
-LS=ls -lartF
-
 # ROOT Config
 ROOTCFLAGS=$(shell root-config --cflags)
 ROOTLIBS  =$(shell root-config --libs) 
 ROOTGLIBS =$(shell root-config --glibs) 
+ROOTINC   =$(shell root-config --incdir)
+
+CC=g++
+CCFLAGS=-O2 -Wall -fPIC ${ROOTCFLAGS}
+ADDFLAGS=-g -std=c++0x
+RC=rootcint
+LBL=-shared -O2 -m64
+LS=ls -lartF
 
 #Project=gem
 Project=gem-light-dqm
@@ -22,7 +23,7 @@ LongPackage=gemtreewriter
 ShortPackage=treewriter
 PackageName=treewriter
 
-IncludeDirs = /usr/include/root
+IncludeDirs = ${ROOTINC}
 IncludeDirs+= $(BUILD_HOME)/$(Project)/$(Package)/include
 IncludeDirs+= ${BUILD_HOME}/${GEM_OS_PROJECT}/gemreadout/include
 INC=$(IncludeDirs:%=-I%)
@@ -45,7 +46,7 @@ all:
 	$(RC) -f $(DIC)/EventDict.cxx -c $(INC) $(Headers)
 	$(CC) $(CCFLAGS) $(ROOTLIBS) $($ROOTGLIBS) $(INC) -c $(DIC)/EventDict.cxx -o $(OBJ)/EventDict.o
 	mkdir -p $(LIB)
-	$(CC) $(LBL) $(Objects) -o $(LIB)/libEvent.so
+	$(CC) $(LBL) $(Objects) -o $(LIB)/libEvent.so $(ROOTLIBS)
 	mkdir -p $(BIN)
 	mkdir -p $(BIN)
 	$(CC) $(ADDFLAGS) $(ROOTLIBS) $($ROOTGLIBS) $(INC) $(SRC)/GEMUnpacker.cc $(LIB)/libEvent.so -o $(BIN)/unpacker
@@ -58,7 +59,7 @@ event:
 	$(RC) -f $(DIC)/EventDict.cxx -c $(INC) $(Headers)
 	$(CC) $(CCFLAGS) $(ROOTLIBS) $($ROOTGLIBS) $(INC) -c $(DIC)/EventDict.cxx -o $(OBJ)/EventDict.o
 	mkdir -p $(LIB)
-	$(CC) $(LBL) $(Objects) -o $(LIB)/libEvent.so
+	$(CC) $(LBL) $(Objects) -o $(LIB)/libEvent.so $(ROOTLIBS)
 
 unpacker:
 	mkdir -p $(BIN)

@@ -5,7 +5,8 @@
 #include "dqm-root/src/common/GEMClusterization/GEMCluster.cc"
 #include "dqm-root/src/common/GEMClusterization/GEMClusterizer.cc"
 #include "TApplication.h"
-#define DEBUG 1
+
+#define DEBUG 0
 
 
 using namespace std;
